@@ -2,11 +2,11 @@ const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const {tokenBuilder} = require('../secrets/tokenBuilder')
 const User = require('./auth-model')
-const {checkUserNameExists,validateBody,checkUserNameAvailable} = require('./auth-middleware')
+const {checkUserNameExists,validateBody,checkUserName} = require('./auth-middleware')
 
 
 router.post('/register',checkUserNameExists,validateBody, (req, res,next) => {
-  res.end('implement register, please!');
+  
   
   let user = req.body
   const rounds = process.env.BCRYPT_ROUNDS || 8
@@ -47,22 +47,19 @@ router.post('/register',checkUserNameExists,validateBody, (req, res,next) => {
   */
 });
 
-router.post('/login',checkUserNameAvailable, (req, res,next) => {
-  res.end('implement login, please!');
+router.post('/login',checkUserName, (req, res,next) => {
+ 
   
-  let {username,password} = req.body
+  let {username} = req.body
 
   User.findBy({username})
   .then(([user])=>{
-    if(user && bcrypt.compareSync(password,user.password)){
-      const token = tokenBuilder(user)
+      const token = user
       res.status(200).json({
-      message:"",
+      message:`welcome, ${user.username}`,
       token
       })
-    }else{
-      res.status(401).json({message:""})
-    }
+    
   })
   .catch(next)
   /*
