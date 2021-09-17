@@ -1,7 +1,21 @@
 const router = require('express').Router();
+const { checkUserName, checkUserNameExists, validateReqBody } = require("./auth-middleware")
+const bcrypt = require("bcryptjs")
+const {tokenBuilder} = require("../auth/secrets/token")
+const User = require("./auth-model")
 
-router.post('/register', (req, res) => {
-  res.end('implement register, please!');
+router.post('/register', validateReqBody, checkUserNameExists, (err, req, res, next) => {
+  let user = req.body 
+  const rounds = process.env.BCRYPT_ROUNDS || 8
+  const hash = bcrypt.hashSync(user.password, rounds)
+  user.password = hash
+  User.add(user)
+    .then(user => {
+      res.json(user)
+    })
+    .catch(next)
+
+
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -29,8 +43,19 @@ router.post('/register', (req, res) => {
   */
 });
 
-router.post('/login', (req, res) => {
-  res.end('implement login, please!');
+router.post('/login', checkUserName, (err, req, res, next) => {
+  let {username} = req.body
+
+  User.findBy({username})
+  .then(([user])=>{
+      const token = user
+      res.status(200).json({
+      message:`welcome, ${user.username}`,
+      token
+      })
+    
+  })
+  .catch(next)
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
